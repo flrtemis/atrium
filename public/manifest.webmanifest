@@ -1,0 +1,9 @@
+{
+  "name": "Orbit — Local Agent",
+  "short_name": "Orbit",
+  "description": "A private, offline-first agent workspace powered by local Ollama.",
+  "display": "standalone",
+  "start_url": "/",
+  "background_color": "#080b0f",
+  "theme_color": "#080b0f"
+}

@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#080b0f" />
+    <meta name="description" content="Orbit: an offline-first, voice-led agent workspace powered by local Ollama." />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="stylesheet" href="/app.css" />
+    <title>Orbit — Local Agent</title>
+  </head>
+  <body>
+    <canvas id="signalCanvas" aria-hidden="true"></canvas>
+    <div class="grain" aria-hidden="true"></div>
+
+    <div class="app-shell" id="appShell">
+      <header class="topbar">
+        <button class="brand" id="homeBrand" type="button" aria-label="Return to Orbit home">
+          <span class="brand-mark" aria-hidden="true">
+            <i></i><i></i><i></i>
+          </span>
+          <span class="brand-word">orbit</span>
+          <span class="brand-sub">local agent</span>
+        </button>
+
+        <div class="topbar-center" aria-label="Current session">
+          <span class="session-pulse"><i></i> Private session</span>
+          <span class="topbar-divider"></span>
+          <span class="session-label" id="sessionLabel">Ready when you are</span>
+        </div>
+
+        <div class="topbar-actions">
+          <button class="connection-chip checking" id="connectionChip" type="button" aria-label="Check local model status">
+            <span class="status-dot"></span>
+            <span id="connectionText">Checking local</span>
+          </button>
+          <button class="model-chip" id="modelButton" type="button" aria-haspopup="dialog">
+            <span class="model-spark" aria-hidden="true">✦</span>
+            <span id="modelName">gemma4:31b</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" /></svg>
+          </button>
+          <button class="icon-button compact" id="commandButton" type="button" aria-label="Open command palette" title="Command palette (⌘K)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5h16M4 12h10M4 16.5h16" /></svg>
+          </button>
+        </div>
+      </header>
+
+      <aside class="nav-rail" aria-label="Main navigation">
+        <nav>
+          <button class="rail-button active" type="button" data-view-target="home" aria-label="Home" title="Home">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 10.5 8-6 8 6v8.2a1.8 1.8 0 0 1-1.8 1.8H5.8A1.8 1.8 0 0 1 4 18.7Z"/><path d="M9.2 20.5v-6.2h5.6v6.2"/></svg>
+            <span>Home</span>
+          </button>
+          <button class="rail-button" type="button" data-view-target="workbench" aria-label="Workflows" title="Agent workflow">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1.2"/><rect x="14" y="14" width="6" height="6" rx="1.2"/><path d="M10 7h2.2A2.8 2.8 0 0 1 15 9.8V14"/></svg>
+            <span>Work</span>
+          </button>
+          <button class="rail-button" type="button" data-view-target="memory" aria-label="Memory" title="Private memory">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5.2A2.2 2.2 0 0 1 9.2 3h7.6A2.2 2.2 0 0 1 19 5.2v13.6a2.2 2.2 0 0 1-2.2 2.2H9.2A2.2 2.2 0 0 1 7 18.8Z"/><path d="M5 6.5v11.7A2.8 2.8 0 0 0 7.8 21M10.4 8h5.2M10.4 12h5.2M10.4 16h3.3"/></svg>
+            <span>Memory</span>
+          </button>
+          <button class="rail-button" type="button" data-view-target="studio" aria-label="Presence Studio" title="Presence Studio">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="6.2" width="12" height="11.6" rx="2"/><path d="m15.5 10 4-2.5a.8.8 0 0 1 1.2.7v7.6a.8.8 0 0 1-1.2.7l-4-2.5Z"/><path d="M7.3 4v2.2M11.7 4v2.2"/></svg>
+            <span>Studio</span>
+          </button>
+        </nav>
+        <div class="rail-footer">
+          <button class="rail-button" type="button" id="privacyButton" aria-label="Privacy controls" title="Privacy controls">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 19 6v5.5c0 4.3-2.9 7.7-7 9-4.1-1.3-7-4.7-7-9V6Z"/><path d="m9.2 12 1.8 1.8 3.9-4"/></svg>
+            <span>Privacy</span>
+          </button>
+        </div>
+      </aside>
+
+      <main class="main-stage">
+        <section class="view home-view active" id="homeView" data-view="home">
+          <div class="ambient-caption reveal">
+            <span class="caption-dot"></span>
+            <span>On-device by design</span>
+          </div>
+
+          <div class="home-grid">
+            <section class="intro-copy reveal reveal-delay-1">
+              <p class="eyebrow"><span></span> Your ambient co-pilot</p>
+              <h1>Say the outcome.<br /><em>Orbit finds the way.</em></h1>
+              <p class="lead">A quiet local agent that turns a conversation into research, creation, planning, and careful action—without sending your working life away.</p>
+
+              <div class="intent-row" aria-label="Suggested prompts">
+                <button class="intent-pill" type="button" data-prompt="Plan my week around the things that matter most.">
+                  <span class="intent-icon">↗</span> Plan my week
+                </button>
+                <button class="intent-pill" type="button" data-prompt="Turn this rough idea into a clear launch plan.">
+                  <span class="intent-icon">✦</span> Shape an idea
+                </button>
+                <button class="intent-pill" type="button" data-prompt="Help me focus. Make a short, calm next-step list.">
+                  <span class="intent-icon">○</span> Find focus
+                </button>
+              </div>
+
+              <button class="show-capabilities" id="capabilitiesButton" type="button">
+                <span>See what Orbit can orchestrate</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 7l5 5-5 5" /></svg>
+              </button>
+            </section>
+
+            <section class="presence-scene reveal reveal-delay-2" aria-label="Orbit digital human presence">
+              <div class="scene-halo halo-a" aria-hidden="true"></div>
+              <div class="scene-halo halo-b" aria-hidden="true"></div>
+              <div class="orbit-line line-one" aria-hidden="true"></div>
+              <div class="orbit-line line-two" aria-hidden="true"></div>
+              <div class="avatar-plinth" aria-hidden="true"><i></i><i></i><i></i></div>
+              <div class="avatar-wrap" id="avatarWrap">
+                <div class="avatar-backlight" aria-hidden="true"></div>
+                <div class="avatar-shadow" aria-hidden="true"></div>
+                <img class="fullbody-avatar" id="fullbodyAvatar" src="/orbit-fullbody.png" alt="Orbit, a full-body digital human avatar" />
+                <div class="avatar-scan" aria-hidden="true"></div>
+                <div class="avatar-glint" aria-hidden="true"></div>
+              </div>
+              <div class="presence-card">
+                <span class="presence-led"></span>
+                <div>
+                  <strong id="presenceState">Orbit is present</strong>
+                  <small id="presenceSubstate">Listening for an intention</small>
+                </div>
+                <button class="presence-expand" id="openStudioFromAvatar" type="button" aria-label="Open Presence Studio">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4H4v4M16 4h4v4M20 16v4h-4M4 16v4h4"/></svg>
+                </button>
+              </div>
+              <div class="scene-meta" aria-hidden="true">
+                <span>LIVE HUMAN PRESENCE</span>
+                <i></i>
+                <span>LOCAL RENDER PATH</span>
+              </div>
+            </section>
+
+            <aside class="signal-panel reveal reveal-delay-3" aria-label="Session signals">
+              <div class="panel-heading">
+                <span>In motion</span>
+                <button class="text-button" type="button" id="openWorkbench">View work</button>
+              </div>
+              <div id="activityFeed" class="activity-feed">
+                <article class="activity-item quiet">
+                  <span class="activity-ring"></span>
+                  <div><strong>Intent space is clear</strong><small>Speak or type to begin</small></div>
+                </article>
+                <article class="activity-item privacy-item">
+                  <span class="lock-glyph">⌁</span>
+                  <div><strong>Private by default</strong><small>Nothing leaves this device</small></div>
+                </article>
+              </div>
+              <div class="autopilot-line">
+                <div>
+                  <small>Agent autonomy</small>
+                  <strong id="autonomyLabel">Approval-first</strong>
+                </div>
+                <button class="toggle-switch" id="autonomyToggle" type="button" aria-label="Toggle agent autonomy" aria-pressed="false"><span></span></button>
+              </div>
+            </aside>
+          </div>
+
+          <div class="home-footer-note reveal reveal-delay-3">
+            <span class="privacy-mini-icon">◌</span>
+            <span>Your conversation, working memory, and model stay close to you.</span>
+          </div>
+        </section>
+
+        <section class="view workbench-view" id="workbenchView" data-view="workbench" aria-labelledby="workbenchTitle">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow"><span></span> Agent workspace</p>
+              <h2 id="workbenchTitle">Work with a visible plan.</h2>
+              <p>Orbit makes its next move legible and waits when a decision belongs to you.</p>
+            </div>
+            <div class="section-actions">
+              <button class="soft-button" id="newRunButton" type="button"><span>＋</span> New run</button>
+              <button class="soft-button icon-only" id="workbenchSettings" type="button" aria-label="Workspace settings">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.4 2.4-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.2h-3.4v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1L5.6 17l.1-.1A1.7 1.7 0 0 0 6 15a1.7 1.7 0 0 0-1.5-1H4.3v-3.4h.2A1.7 1.7 0 0 0 6 9a1.7 1.7 0 0 0-.3-1.9l-.1-.1L8 4.6l.1.1A1.7 1.7 0 0 0 10 5a1.7 1.7 0 0 0 1-1.5v-.2h3.4v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.2v3.4h-.2a1.7 1.7 0 0 0-1.5 1.6Z"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="workbench-grid">
+            <article class="run-card live-run-card">
+              <div class="run-card-head">
+                <div><span class="run-state active-state"><i></i> Current thread</span><h3 id="runTitle">An open canvas</h3></div>
+                <button class="more-button" type="button" aria-label="More options">•••</button>
+              </div>
+              <p id="runDescription">Describe an outcome and Orbit will turn it into a proposed sequence, then keep you in control of every consequential step.</p>
+              <ol class="plan-list" id="planList">
+                <li class="plan-item current"><span class="plan-index">01</span><div><strong>Understand the outcome</strong><small>Waiting for your direction</small></div><span class="plan-state">Ready</span></li>
+                <li class="plan-item"><span class="plan-index">02</span><div><strong>Draft a careful route</strong><small>Sources, tools, and boundaries</small></div><span class="plan-state muted">Next</span></li>
+                <li class="plan-item"><span class="plan-index">03</span><div><strong>Bring back the useful parts</strong><small>Reviewable, not hidden</small></div><span class="plan-state muted">Then</span></li>
+              </ol>
+              <div class="run-card-footer"><span class="local-tag">◉ Local-only context</span><button class="text-button" id="returnHomeButton" type="button">Talk to Orbit</button></div>
+            </article>
+
+            <article class="run-card capability-card">
+              <div class="run-card-head"><div><span class="run-state"><i></i> Available hands</span><h3>One intention, many disciplines</h3></div></div>
+              <div class="capability-grid">
+                <button class="capability-tile" type="button" data-prompt="Research this topic from several perspectives and show me what matters."><span class="capability-icon research">⌕</span><strong>Research</strong><small>Read, compare, synthesize</small></button>
+                <button class="capability-tile" type="button" data-prompt="Help me write and build this project with a clear plan."><span class="capability-icon build">⌘</span><strong>Build</strong><small>Code, create, debug</small></button>
+                <button class="capability-tile" type="button" data-prompt="Organize this into an approval-first workflow."><span class="capability-icon flow">⌁</span><strong>Flow</strong><small>Plan, hand off, follow through</small></button>
+                <button class="capability-tile" type="button" data-prompt="Turn this into a clear visual or media brief."><span class="capability-icon studio">◉</span><strong>Studio</strong><small>Image, video, voice</small></button>
+              </div>
+              <div class="integration-note"><span class="integration-spark">✦</span><p><strong>Tool-aware, not tool-hungry.</strong> Orbit proposes a capability before it uses one.</p></div>
+            </article>
+
+            <article class="run-card timeline-card">
+              <div class="run-card-head"><div><span class="run-state"><i></i> Today</span><h3>Continuity</h3></div><button class="text-button" type="button" data-view-target="memory">Open memory</button></div>
+              <div class="timeline" id="timeline">
+                <div class="timeline-empty"><span>○</span><p>Your useful moments will appear here.</p></div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="view memory-view" id="memoryView" data-view="memory" aria-labelledby="memoryTitle">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow"><span></span> Private continuity</p>
+              <h2 id="memoryTitle">Memory that knows its place.</h2>
+              <p>Review what Orbit can remember. Everything below is stored only in this browser until you remove it.</p>
+            </div>
+            <button class="soft-button danger-soft" id="clearMemoryButton" type="button"><span>×</span> Forget this device</button>
+          </div>
+          <div class="memory-layout">
+            <article class="memory-hero-card">
+              <div class="memory-constellation" aria-hidden="true"><span></span><i></i><b></b><em></em><u></u></div>
+              <div class="memory-hero-copy"><span class="run-state"><i></i> Local semantic map</span><h3>Useful context, not a shadow profile.</h3><p>Save an intention, a preference, or a project thread only when you decide it helps.</p><button class="soft-button" id="addMemoryButton" type="button">Add a memory</button></div>
+            </article>
+            <article class="memory-list-card">
+              <div class="memory-list-head"><h3>On this device</h3><span id="memoryCount">0 items</span></div>
+              <div class="memory-list" id="memoryList"><div class="empty-state"><span>◇</span><p>Nothing has been saved yet.</p><small>When you choose to retain a detail, it will show up here.</small></div></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="view studio-view" id="studioView" data-view="studio" aria-labelledby="studioTitle">
+          <div class="section-head studio-head">
+            <div>
+              <p class="eyebrow"><span></span> Presence studio</p>
+              <h2 id="studioTitle">A more human way to work.</h2>
+              <p>Talk face to face with Orbit. Your camera and microphone remain local to this browser unless you explicitly connect another service.</p>
+            </div>
+            <span class="local-tag large-tag">◉ Local capture only</span>
+          </div>
+          <div class="studio-grid">
+            <article class="studio-stage">
+              <div class="studio-stage-top"><span class="run-state active-state"><i></i> <span id="studioLiveState">Avatar ready</span></span><span class="studio-clock" id="studioClock">00:00</span></div>
+              <div class="studio-avatar-area" id="studioAvatarArea">
+                <div class="studio-light one"></div><div class="studio-light two"></div>
+                <img src="/orbit-fullbody.png" class="studio-avatar" id="studioAvatar" alt="Full-body Orbit avatar in the presence studio" />
+                <div class="studio-floor" aria-hidden="true"></div>
+                <div class="voice-wave studio-wave" id="studioWave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                <div class="avatar-render-note"><span>FULL-BODY AVATAR</span><span>•</span><span>LOCAL RENDER SEAM</span></div>
+              </div>
+              <div class="studio-controls">
+                <button class="studio-control primary" id="startPresenceButton" type="button"><span class="control-icon">◉</span><span id="presenceButtonLabel">Start local camera</span></button>
+                <button class="studio-control" id="studioMicButton" type="button" disabled><span class="control-icon">⌁</span><span id="studioMicLabel">Mic off</span></button>
+                <button class="studio-control" id="endPresenceButton" type="button" disabled><span class="control-icon">×</span><span>End</span></button>
+              </div>
+            </article>
+            <aside class="studio-side">
+              <article class="camera-card">
+                <div class="camera-card-head"><span>Your local view</span><span class="camera-status" id="cameraStatus"><i></i> Off</span></div>
+                <div class="camera-preview"><video id="localVideo" autoplay muted playsinline></video><div class="camera-placeholder" id="cameraPlaceholder"><span>◌</span><p>Camera stays off until you start it.</p></div></div>
+              </article>
+              <article class="presence-notes">
+                <span class="notes-label">A real 3D avatar path</span>
+                <ol>
+                  <li><b>01</b><span>Use the included full-body visual as a presence shell now.</span></li>
+                  <li><b>02</b><span>Attach a locally packaged, rigged VRM/glTF human when your renderer is ready.</span></li>
+                  <li><b>03</b><span>Drive facial blend shapes and gesture from local speech/viseme signals.</span></li>
+                </ol>
+                <button class="text-button" id="renderInfoButton" type="button">Why this boundary exists</button>
+              </article>
+            </aside>
+          </div>
+        </section>
+      </main>
+
+      <aside class="response-sheet" id="responseSheet" hidden aria-live="polite" aria-label="Orbit response">
+        <div class="response-sheet-head"><span><i></i> Orbit</span><div><button class="response-action" id="speakResponseButton" type="button">Read aloud</button><button class="response-close" id="closeResponseButton" type="button" aria-label="Close response">×</button></div></div>
+        <div class="response-content" id="responseContent"></div>
+        <div class="response-sheet-foot"><span id="responseMeta">Generated locally</span><button class="text-button" id="reviewResponseButton" type="button">Open work view</button></div>
+      </aside>
+
+      <section class="composer-area" aria-label="Talk to Orbit">
+        <div class="composer-shell" id="composerShell">
+          <button class="attachment-button" id="attachmentButton" type="button" aria-label="Attach a local file" title="Attach local file">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m20.5 11.3-8.2 8.2a5.1 5.1 0 0 1-7.2-7.2l8.2-8.2a3.5 3.5 0 0 1 5 5L10 17.3a1.9 1.9 0 1 1-2.7-2.7l7.6-7.6"/></svg>
+          </button>
+          <input id="fileInput" type="file" hidden multiple />
+          <div class="composer-input-wrap">
+            <textarea id="promptInput" rows="1" placeholder="Tell Orbit what you want to make happen…" aria-label="Message to Orbit"></textarea>
+            <span class="attachment-label" id="attachmentLabel" hidden></span>
+          </div>
+          <div class="composer-actions">
+            <button class="voice-button" id="voiceButton" type="button" aria-label="Speak to Orbit" title="Speak to Orbit">
+              <span class="voice-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+              <span class="voice-label">Speak</span>
+            </button>
+            <button class="send-button" id="sendButton" type="button" aria-label="Send message">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 12 15-8-4 16-4-6Z"/><path d="m11 14 4-4"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="composer-meta"><span id="composerHint">Press <kbd>⌘</kbd><kbd>↵</kbd> to send</span><span>Local Ollama bridge · no cloud key</span></div>
+      </section>
+    </div>
+
+    <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
+
+    <dialog class="model-dialog" id="modelDialog">
+      <div class="dialog-topline"><span class="dialog-kicker">LOCAL MODEL BRIDGE</span><button class="dialog-close" type="button" data-close-dialog="modelDialog" aria-label="Close">×</button></div>
+      <h2>Your intelligence stays close.</h2>
+      <p>Orbit connects to Ollama on this device through a same-origin local bridge. It never needs a hosted model key.</p>
+      <div class="model-status-box" id="modelStatusBox"><span class="status-dot"></span><div><strong id="modelStatusTitle">Checking Ollama…</strong><small id="modelStatusDescription">Looking for a local model.</small></div></div>
+      <div class="model-command"><span>Terminal</span><code>ollama pull gemma4:31b</code><button type="button" id="copyModelCommand">Copy</button></div>
+      <div class="dialog-footnote">Set <code>OLLAMA_HOST</code> only to a private/local Ollama address if your daemon runs elsewhere.</div>
+    </dialog>
+
+    <dialog class="privacy-dialog" id="privacyDialog">
+      <div class="dialog-topline"><span class="dialog-kicker">CONTROL PLANE</span><button class="dialog-close" type="button" data-close-dialog="privacyDialog" aria-label="Close">×</button></div>
+      <h2>Nothing consequential happens quietly.</h2>
+      <p>Orbit is designed around visible plans, local context, and explicit approval. These are UI guardrails—not a replacement for reviewing any model output.</p>
+      <div class="guardrail-list">
+        <div><span>01</span><p><strong>Local model route</strong><small>Chat requests go only to your configured Ollama daemon.</small></p></div>
+        <div><span>02</span><p><strong>Review before action</strong><small>Automation is staged as a proposed plan, not silent execution.</small></p></div>
+        <div><span>03</span><p><strong>Memory is removable</strong><small>Browser-stored context can be reviewed and cleared at any time.</small></p></div>
+      </div>
+      <button class="soft-button full-width" type="button" data-close-dialog="privacyDialog">I understand</button>
+    </dialog>
+
+    <dialog class="memory-dialog" id="memoryDialog">
+      <div class="dialog-topline"><span class="dialog-kicker">SAVE CONTEXT</span><button class="dialog-close" type="button" data-close-dialog="memoryDialog" aria-label="Close">×</button></div>
+      <h2>What should Orbit remember?</h2>
+      <p>Saved only on this device. Keep it short, useful, and under your control.</p>
+      <textarea id="memoryInput" rows="4" placeholder="For example: I like concise project plans with clear ownership."></textarea>
+      <div class="dialog-actions"><button class="soft-button" type="button" data-close-dialog="memoryDialog">Cancel</button><button class="soft-button primary-soft" id="saveMemoryButton" type="button">Save locally</button></div>
+    </dialog>
+
+    <dialog class="renderer-dialog" id="rendererDialog">
+      <div class="dialog-topline"><span class="dialog-kicker">RENDERER HANDOFF</span><button class="dialog-close" type="button" data-close-dialog="rendererDialog" aria-label="Close">×</button></div>
+      <h2>A full human presence needs a real render pipeline.</h2>
+      <p>The current experience uses an included full-body digital-human shell and live state transitions. A genuinely animated photoreal 3D human requires a locally bundled rigged model, a WebGPU/WebGL renderer, and locally generated facial/gesture signals.</p>
+      <div class="renderer-stack"><div><span>Asset</span><strong>VRM or glTF human with facial blend shapes</strong></div><div><span>Motion</span><strong>Local audio → viseme, gaze, idle, and gesture controllers</strong></div><div><span>Voice</span><strong>Local TTS streamed into the avatar driver</strong></div></div>
+      <button class="soft-button primary-soft full-width" type="button" data-close-dialog="rendererDialog">Keep the integration seam visible</button>
+    </dialog>
+
+    <div class="command-palette" id="commandPalette" hidden>
+      <button class="palette-scrim" id="paletteScrim" type="button" aria-label="Close command palette"></button>
+      <div class="palette-box" role="dialog" aria-modal="true" aria-labelledby="paletteTitle">
+        <div class="palette-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="5.8"/><path d="m16 16 4.2 4.2"/></svg><input id="paletteInput" type="text" placeholder="Jump anywhere…" autocomplete="off"/><kbd>esc</kbd></div>
+        <p class="palette-label" id="paletteTitle">ACTIONS</p>
+        <div class="palette-list">
+          <button type="button" data-palette-action="speak"><span class="palette-icon">⌁</span><span>Talk to Orbit</span><kbd>V</kbd></button>
+          <button type="button" data-palette-action="workbench"><span class="palette-icon">⌘</span><span>Open agent workspace</span><kbd>W</kbd></button>
+          <button type="button" data-palette-action="studio"><span class="palette-icon">◉</span><span>Open Presence Studio</span><kbd>S</kbd></button>
+          <button type="button" data-palette-action="memory"><span class="palette-icon">◇</span><span>Review private memory</span><kbd>M</kbd></button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
