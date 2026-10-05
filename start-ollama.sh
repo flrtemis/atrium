@@ -49,6 +49,5 @@ if ! ollama list | grep -q "${MODEL}"; then
 fi
 
 echo "Ollama is ready for local Gemma inference."
-echo "Atrium: to let her actually READ camera frames (not just measure them),"
-echo "use a vision-capable model, e.g. OLLAMA_MODEL=gemma3:12b ./run-all-local.sh"
-echo "Finger counting works on any model via landmark tracking."
+echo "Gemma 4 models (gemma4:26b, gemma4:31b) include vision out of the box!"
+echo "Finger counting and motion tracking work on any model via landmark tracking."

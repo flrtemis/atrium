@@ -15,6 +15,11 @@ echo "============================================================"
 echo " Starting Local Atrium Stack"
 echo "============================================================"
 
+# Add Bun to PATH if installed in user's home directory
+if [ -d "$HOME/.bun/bin" ] && [[ ":$PATH:" != *":$HOME/.bun/bin:"* ]]; then
+  export PATH="$HOME/.bun/bin:$PATH"
+fi
+
 export OLLAMA_HOST="${OLLAMA_HOST:-127.0.0.1:11434}"
 export OLLAMA_MODEL="${OLLAMA_MODEL:-gemma4:31b}"
 export LOCAL_LLM_REQUEST_TIMEOUT_S="${LOCAL_LLM_REQUEST_TIMEOUT_S:-300}"
@@ -32,6 +37,14 @@ export ATRIUM_STRIP_IMAGES="${ATRIUM_STRIP_IMAGES:-0}"
 
 # Make scripts executable
 chmod +x start-ollama.sh start-speech-to-speech.sh start-avatar-frontend.sh test-tools.sh
+
+# Ensure frontend dependencies are installed
+if command -v bun &> /dev/null; then
+  if [ ! -d "node_modules/@met4citizen/talkinghead" ]; then
+    echo "Installing frontend dependencies (bun install)..."
+    bun install
+  fi
+fi
 
 # 0/4 Optional landmark models. They are what makes finger counting exact and
 # instant; Atrium runs perfectly well without them.

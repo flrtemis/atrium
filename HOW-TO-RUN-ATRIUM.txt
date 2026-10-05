@@ -1,6 +1,8 @@
 	JUST TWO SIMPLE WSL2 COMMANDS:
-cd /home/l3ung/atrium
+cd ~/atrium-arena-01a1096b-atrium
 OLLAMA_MODEL=gemma4:26b PATH="$HOME/.bun/bin:$PATH" ./run-all-local.sh
+
+(If starting frontend separately or running for the first time: `bun install`)
 
 	THEN GO TO THIS URL IN A BROWSER:
 http://localhost:3000
