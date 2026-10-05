@@ -1,0 +1,24 @@
+{
+  "name": "atrium",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun --hot ./index.ts",
+    "start": "bun ./index.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "download:vision": "python3 download_vision_assets.py",
+    "download:tts": "python3 download_tts_assets.py"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@met4citizen/talkinghead": "^1.7.0",
+    "three": "~0.180.0"
+  }
+}

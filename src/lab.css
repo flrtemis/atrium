@@ -1,0 +1,296 @@
+/*
+ * Camera Lab — a workbench page, not the app.
+ * Same palette as style.css; a denser, two-column layout because the point
+ * here is to read numbers, not to look at an avatar.
+ */
+
+body {
+  overflow: auto;
+}
+
+#lab {
+  min-height: 100dvh;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 24px calc(40px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+#lab-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+#lab-topbar h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+#lab-topbar p {
+  margin: 6px 0 0;
+  max-width: 620px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-faint);
+}
+
+.lab-back {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+  color: var(--text-dim);
+  font-size: 12px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.lab-back:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+/* ── Stage ───────────────────────────────────────────────────────────── */
+
+#lab-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(240px, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+#lab-frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: #05060a;
+}
+
+#lab-video,
+#lab-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+#lab-video {
+  object-fit: cover;
+}
+
+#lab-overlay {
+  pointer-events: none;
+}
+
+#lab-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--text-faint);
+  background: #05060a;
+}
+
+/* ── Read-outs ───────────────────────────────────────────────────────── */
+
+#lab-readout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.readout-block {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elev);
+}
+
+.readout-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.readout-big {
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: 40px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--live);
+}
+
+.readout-mid {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.motion-bars {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.motion-bars i {
+  --v: 0;
+  display: block;
+  height: 22px;
+  border-radius: 3px;
+  background: rgba(251, 191, 36, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.motion-bars i::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: scaleY(var(--v));
+  transform-origin: bottom;
+  background: rgba(251, 191, 36, 0.75);
+  transition: transform 0.12s linear;
+}
+
+/* ── Panel ───────────────────────────────────────────────────────────── */
+
+#lab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elev);
+}
+
+.panel-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px;
+}
+
+.panel-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.panel-row select {
+  min-width: 150px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev-2);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.panel-row .check-row {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 8px;
+}
+
+.panel-row .check-row input {
+  width: auto;
+  margin: 0;
+  accent-color: var(--text);
+}
+
+#lab-start.primary {
+  padding: 9px 20px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--text);
+  color: var(--bg);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+#lab-start.primary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.panel-stats {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+}
+
+.panel-block {
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+
+#lab-text {
+  margin: 8px 0 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--text-dim);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.panel-block .hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text-faint);
+}
+
+.panel-block .hint code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--bg-elev-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+@media (max-width: 860px) {
+  #lab-stage {
+    grid-template-columns: 1fr;
+  }
+
+  #lab-topbar {
+    flex-direction: column;
+  }
+}

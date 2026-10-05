@@ -1,0 +1,829 @@
+/*
+ * Design language carried over from the source Space (see its DESIGN.md):
+ * a precise cool-grey dark canvas, monochrome chrome, hairlines not boxes,
+ * Inter for humans and Geist Mono for the machine voice.
+ */
+
+@font-face {
+  font-family: "Inter";
+  src: url("../public/vendor/Inter-latin.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("../public/vendor/GeistMono-latin.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+
+:root {
+  --bg: #0a0b10;
+  --bg-elev: #13151c;
+  --bg-elev-2: #1b1e29;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --text: #f5f6fa;
+  --text-dim: rgba(245, 246, 250, 0.65);
+  --text-faint: rgba(245, 246, 250, 0.42);
+  --error: #ff6a75;
+  --live: #22d3ee;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+}
+
+#app {
+  position: relative;
+  height: 100dvh;
+}
+
+/* ── The stage ──────────────────────────────────────────────────────── */
+
+#stage {
+  position: absolute;
+  inset: 0;
+}
+
+/* TalkingHead sizes the canvas itself (inline styles from its resize
+   observer) — don't fight it, just keep it block-level. */
+#stage canvas {
+  display: block;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+#loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  background: var(--bg);
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+}
+
+#loading.done {
+  opacity: 0;
+}
+
+/* ── Topbar ─────────────────────────────────────────────────────────── */
+
+#topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 18px 20px;
+  pointer-events: none;
+}
+
+#topbar > * {
+  pointer-events: auto;
+}
+
+#identity h1 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+#identity p {
+  margin: 4px 0 0;
+  max-width: 340px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-faint);
+}
+
+#identity strong {
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+/* ── Buttons ────────────────────────────────────────────────────────── */
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+  color: var(--text-dim);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.icon-btn:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.icon-btn.active {
+  color: var(--error);
+  border-color: var(--border-strong);
+}
+
+#main-btn {
+  min-width: 190px;
+  height: 46px;
+  padding: 0 26px;
+  border: none;
+  border-radius: 23px;
+  background: var(--text);
+  color: var(--bg);
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.12s ease, opacity 0.15s ease;
+}
+
+#main-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+#main-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+#main-btn.live {
+  background: var(--bg-elev);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+}
+
+/* ── Controls / caption ─────────────────────────────────────────────── */
+
+#controls {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px calc(20px + env(safe-area-inset-bottom));
+}
+
+#prompt-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: min(520px, calc(100vw - 40px));
+  background: rgba(19, 21, 28, 0.88);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 6px 8px 6px 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+#prompt-form:focus-within {
+  border-color: var(--border-strong);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+#prompt-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+  resize: none;
+  height: 22px;
+  max-height: 120px;
+  padding: 2px 0;
+  margin: 0;
+}
+
+#prompt-input::placeholder {
+  color: var(--text-faint);
+}
+
+#prompt-send {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+}
+
+#prompt-send:hover:not(:disabled) {
+  color: var(--bg);
+  background: #ffffff;
+  transform: translateY(-1px);
+}
+
+#prompt-send:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+#buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#attach-btn {
+  width: 40px;
+  height: 40px;
+}
+
+#attach-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+#caption {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  transition: color 0.2s ease;
+}
+
+#caption.live {
+  color: var(--live);
+}
+
+#caption.error {
+  color: var(--error);
+}
+
+/* ── Subtitles ──────────────────────────────────────────────────────── */
+
+#subtitles {
+  position: absolute;
+  left: 50%;
+  bottom: calc(170px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  max-width: min(640px, calc(100vw - 48px));
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  background: rgba(10, 11, 16, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  font-size: 15px;
+  line-height: 1.5;
+  text-align: center;
+  text-wrap: balance;
+  color: var(--text);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+#subtitles.visible {
+  opacity: 1;
+}
+
+/* ── Settings dialog ────────────────────────────────────────────────── */
+
+#settings {
+  width: min(440px, calc(100vw - 40px));
+  padding: 22px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-elev);
+  color: var(--text);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.32);
+}
+
+#settings::backdrop {
+  background: rgba(5, 6, 9, 0.6);
+  backdrop-filter: blur(2px);
+}
+
+#settings h2 {
+  margin: 0 0 16px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+#settings label {
+  display: block;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+#settings select,
+#settings textarea,
+#settings input {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev-2);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+}
+
+#settings select:focus-visible,
+#settings textarea:focus-visible,
+#settings input:focus-visible {
+  outline: 1px solid var(--text-dim);
+  outline-offset: 1px;
+}
+
+#settings textarea {
+  resize: vertical;
+}
+
+#settings .check-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+#settings .check-row input {
+  display: inline-block;
+  width: auto;
+  margin: 0;
+  accent-color: var(--text);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+.dialog-actions .primary {
+  padding: 9px 20px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--text);
+  color: var(--bg);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* ── Focus + motion floors ──────────────────────────────────────────── */
+
+button:focus-visible {
+  outline: 2px solid var(--text-dim);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Phones ─────────────────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  #identity p {
+    display: none;
+  }
+
+  #subtitles {
+    bottom: calc(160px + env(safe-area-inset-bottom));
+    font-size: 14px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Atrium — eyes.
+   Everything below is the camera layer: the self-view, the tracking
+   overlay, the "what she can see" read-out, and the settings that tune
+   it. Same design language: hairlines, monochrome chrome, machine voice
+   in Geist Mono. The one new colour is the cyan "live" accent, and it is
+   reserved exclusively for "the camera is on and watching".
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Eyes status chip (topbar) ──────────────────────────────────────── */
+
+.eyes-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+  padding: 5px 10px 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(19, 21, 28, 0.72);
+  backdrop-filter: blur(8px);
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.eyes-chip:hover {
+  border-color: var(--border-strong);
+  color: var(--text-dim);
+}
+
+.eyes-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.eyes-chip.is-live {
+  color: var(--live);
+  border-color: rgba(34, 211, 238, 0.32);
+}
+
+.eyes-chip.is-live .eyes-dot {
+  box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.6);
+  animation: eyes-pulse 2.2s ease-out infinite;
+}
+
+.eyes-chip.is-idle {
+  color: var(--text-dim);
+}
+
+.eyes-chip.is-off {
+  color: var(--text-faint);
+}
+
+@keyframes eyes-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.55); }
+  70% { box-shadow: 0 0 0 7px rgba(34, 211, 238, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eyes-chip.is-live .eyes-dot { animation: none; }
+}
+
+/* ── Camera button ──────────────────────────────────────────────────── */
+
+#camera-btn {
+  width: 40px;
+  height: 40px;
+}
+
+#camera-btn.is-live {
+  color: var(--live);
+  border-color: rgba(34, 211, 238, 0.4);
+  background: rgba(34, 211, 238, 0.08);
+}
+
+/* ── Self-view ──────────────────────────────────────────────────────── */
+
+#selfview {
+  position: absolute;
+  left: 20px;
+  bottom: calc(128px + env(safe-area-inset-bottom));
+  width: 260px;
+  z-index: 5;
+  user-select: none;
+}
+
+#selfview-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: #05060a;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  transition: border-color 0.2s ease;
+}
+
+#selfview:not(.is-off) #selfview-frame {
+  border-color: rgba(34, 211, 238, 0.28);
+}
+
+#selfview-video,
+#selfview-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+#selfview-video {
+  object-fit: cover;
+  background: #05060a;
+}
+
+#selfview-overlay {
+  pointer-events: none;
+}
+
+#selfview-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(6, 8, 12, 0.66);
+  color: var(--text-dim);
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+#selfview-frame:hover #selfview-close,
+#selfview-close:focus-visible {
+  opacity: 1;
+}
+
+#selfview-close:hover {
+  color: var(--text);
+}
+
+#selfview-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  background: #05060a;
+}
+
+#selfview-hud {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 7px;
+  padding: 0 2px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+}
+
+#selfview-status {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-dim);
+}
+
+#selfview-stats {
+  flex-shrink: 0;
+  color: var(--text-faint);
+}
+
+/* ── "What she can see" line ────────────────────────────────────────── */
+
+#vision-hud {
+  max-width: min(640px, calc(100vw - 40px));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(34, 211, 238, 0.7);
+}
+
+/* ── Settings additions ─────────────────────────────────────────────── */
+
+#settings h3 {
+  margin: 0 0 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+#settings .settings-sep {
+  height: 1px;
+  margin: 18px 0;
+  background: var(--border);
+}
+
+#settings .field-row {
+  display: flex;
+  gap: 10px;
+}
+
+#settings .field-row > label {
+  flex: 1;
+  min-width: 0;
+}
+
+#settings .hint {
+  margin: 4px 0 14px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-faint);
+}
+
+#settings .hint a {
+  color: var(--text-dim);
+}
+
+#vision-advanced {
+  margin-bottom: 14px;
+}
+
+#vision-advanced summary {
+  font-size: 12px;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+#vision-advanced .check-row {
+  margin-top: 10px;
+}
+
+/* ── Avatar parts panel ─────────────────────────────────────────────── */
+
+#hierarchy-panel {
+  position: absolute;
+  top: 74px;
+  right: 20px;
+  z-index: 6;
+  width: 250px;
+  max-height: min(58vh, 520px);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: rgba(19, 21, 28, 0.94);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+#hierarchy-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+#hierarchy-close {
+  border: none;
+  background: none;
+  color: var(--text-faint);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+#hierarchy-close:hover {
+  color: var(--text);
+}
+
+#hierarchy-list {
+  overflow-y: auto;
+  padding: 10px 14px 14px;
+}
+
+#hierarchy-list h4 {
+  margin: 10px 0 6px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+#hierarchy-list h4:first-child {
+  margin-top: 0;
+}
+
+#hierarchy-list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#hierarchy-list li {
+  padding: 3px 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#hierarchy-list .hierarchy-empty {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+/* ── Phones ─────────────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  #selfview {
+    width: 180px;
+    bottom: auto;
+    top: 74px;
+  }
+
+  #hierarchy-panel {
+    top: 74px;
+    width: min(250px, calc(100vw - 40px));
+  }
+}
+
+@media (max-width: 600px) {
+  #selfview {
+    width: 132px;
+    left: 12px;
+    top: 66px;
+  }
+
+  #selfview-hud {
+    font-size: 9px;
+  }
+
+  #hierarchy-panel {
+    top: 66px;
+    right: 12px;
+  }
+}

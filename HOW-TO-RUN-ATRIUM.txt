@@ -1,0 +1,16 @@
+	JUST TWO SIMPLE WSL2 COMMANDS:
+cd /home/l3ung/atrium
+OLLAMA_MODEL=gemma4:26b PATH="$HOME/.bun/bin:$PATH" ./run-all-local.sh
+
+	THEN GO TO THIS URL IN A BROWSER:
+http://localhost:3000
+
+	OPTIONAL — EXACT FINGER / BODY / FACE TRACKING (run once, needs internet):
+python3 download_vision_assets.py
+
+	TO TEST THE CAMERA ON ITS OWN, WITH NO MODEL RUNNING:
+http://localhost:3000/lab
+
+	ONCE YOU ARE TALKING: press the camera button in the controls (or just
+	allow the camera when the browser asks), then hold up some fingers and
+	ask "how many?" — she will look, count, and tell you.

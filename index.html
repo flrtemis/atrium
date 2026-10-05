@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Atrium (Offline Edition)</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <main id="app">
+      <!-- The avatar is the hero: a full-viewport 3D stage. -->
+      <div id="stage" aria-label="3D avatar"></div>
+      <div id="loading">Loading avatar…</div>
+
+      <header id="topbar">
+        <div id="identity">
+          <h1>Atrium</h1>
+          <p>
+            Talk to <strong>Gemma&nbsp;4</strong> face to face — and she can see you back.
+            parakeet&nbsp;STT · Ollama&nbsp;inference · Qwen3&nbsp;TTS · TalkingHead&nbsp;3D ·
+            live&nbsp;camera&nbsp;vision
+          </p>
+          <button id="eyes-chip" class="eyes-chip is-off" title="Camera vision status" hidden>
+            <span class="eyes-dot"></span><span id="eyes-chip-text">EYES OFF</span>
+          </button>
+        </div>
+        <div id="topbar-actions">
+          <button id="hierarchy-btn" class="icon-btn" aria-label="Avatar parts" title="Avatar parts">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+          </button>
+          <button id="settings-btn" class="icon-btn" aria-label="Settings" title="Settings">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- What she's saying, as it's spoken. -->
+      <div id="subtitles" aria-live="polite"></div>
+
+      <div id="hierarchy-panel" class="hidden">
+        <div id="hierarchy-header">
+          <span>Avatar Parts</span>
+          <button id="hierarchy-close" aria-label="Close">✕</button>
+        </div>
+        <div id="hierarchy-list"></div>
+      </div>
+
+      <!-- ── Atrium: the eye ─────────────────────────────────────────────
+           Your camera, and a live drawing of everything the model is tracking.
+           The overlay is drawn from the same numbers the model reads, so if it
+           says "three fingers", three fingertips are lit up here.            -->
+      <section id="selfview" class="hidden" aria-label="Camera self-view">
+        <div id="selfview-frame">
+          <video id="selfview-video" playsinline muted></video>
+          <canvas id="selfview-overlay"></canvas>
+          <button id="selfview-close" aria-label="Hide camera view" title="Hide camera view">✕</button>
+          <div id="selfview-empty">Camera off</div>
+        </div>
+        <div id="selfview-hud">
+          <span id="selfview-status">camera off</span>
+          <span id="selfview-stats"></span>
+        </div>
+      </section>
+
+      <footer id="controls">
+        <form id="prompt-form" autocomplete="off">
+          <textarea id="prompt-input" rows="1" placeholder="Type a message" aria-label="Message"></textarea>
+          <button id="prompt-send" class="icon-btn" type="submit" aria-label="Send message" title="Send message">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M22 2 11 13"></path>
+              <path d="m22 2-7 20-4-9-9-4Z"></path>
+            </svg>
+          </button>
+        </form>
+        <div id="caption">LOADING…</div>
+        <div id="vision-hud" hidden></div>
+        <div id="buttons">
+          <button id="main-btn" disabled>
+            <span id="main-btn-label">Loading…</span>
+          </button>
+          <button id="camera-btn" class="icon-btn is-off" aria-label="Turn on my camera" title="Turn on my camera">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M23 7l-7 5 7 5V7z"></path>
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+            </svg>
+          </button>
+          <button id="attach-btn" class="icon-btn" aria-label="Attach image or video" title="Attach image or video">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21.44 11.05l-8.49 8.49a6 6 0 0 1-8.49-8.49l8.49-8.49a4 4 0 1 1 5.66 5.66l-8.5 8.49a2 2 0 1 1-2.82-2.83l7.78-7.78"></path>
+            </svg>
+          </button>
+          <button id="mute-btn" class="icon-btn" hidden aria-label="Mute microphone" title="Mute microphone">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="23"></line>
+              <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+          </button>
+          <input id="upload-input" type="file" accept="image/*,video/*" hidden />
+        </div>
+      </footer>
+
+      <dialog id="settings">
+        <form method="dialog">
+          <h2>Settings</h2>
+          <label>
+            Voice
+            <select id="voice"></select>
+          </label>
+          <label class="check-row">
+            <input type="checkbox" id="subtitles-toggle" />
+            Show subtitles while she speaks
+          </label>
+          <label>
+            Extra instructions
+            <textarea
+              id="instructions"
+              rows="4"
+              placeholder="Anything you want her to know or do (persona stays)."
+            ></textarea>
+          </label>
+          <label id="direct-url-row" hidden>
+            Direct server URL
+            <input
+              id="direct-url"
+              type="url"
+              placeholder="ws://localhost:8080/v1/realtime"
+              spellcheck="false"
+            />
+          </label>
+
+          <div class="settings-sep"></div>
+          <h3>Eyes</h3>
+
+          <label>
+            Camera
+            <select id="camera-device"></select>
+          </label>
+
+          <div class="field-row">
+            <label>
+              Watching
+              <select id="vision-mode">
+                <option value="live">Live — sees you all the time</option>
+                <option value="ondemand">On demand — looks when asked</option>
+                <option value="off">Off</option>
+              </select>
+            </label>
+            <label>
+              Pace
+              <select id="vision-rate">
+                <option value="120">Fastest (more CPU)</option>
+                <option value="250">Balanced</option>
+                <option value="600">Gentle</option>
+                <option value="1200">Slowest (least CPU)</option>
+              </select>
+            </label>
+          </div>
+
+          <label class="check-row">
+            <input type="checkbox" id="vision-speak" />
+            Speak up when she notices something change
+          </label>
+          <label class="check-row">
+            <input type="checkbox" id="vision-images" />
+            Send real camera frames to the model (needs a vision model)
+          </label>
+          <label class="check-row">
+            <input type="checkbox" id="vision-mirror" />
+            Mirror the camera view
+          </label>
+          <label class="check-row">
+            <input type="checkbox" id="vision-overlay" />
+            Draw what she is tracking on the self-view
+          </label>
+
+          <details id="vision-advanced">
+            <summary>Tracking detail</summary>
+            <label class="check-row"><input type="checkbox" id="vision-hands" /> Track hands (finger counting)</label>
+            <label class="check-row"><input type="checkbox" id="vision-pose" /> Track body &amp; posture</label>
+            <label class="check-row"><input type="checkbox" id="vision-face" /> Track face</label>
+            <label class="check-row"><input type="checkbox" id="vision-cdn" /> Allow CDN fallback for tracking models</label>
+            <p class="hint" id="vision-asset-hint"></p>
+          </details>
+
+          <p class="hint">
+            <a href="/lab" target="_blank" rel="noreferrer">Open the Camera Lab ↗</a> to test
+            tracking without starting a conversation.
+          </p>
+
+          <div class="dialog-actions">
+            <button value="close" class="primary">Done</button>
+          </div>
+        </form>
+      </dialog>
+    </main>
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>

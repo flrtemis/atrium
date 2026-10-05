@@ -1,0 +1,31 @@
+# ── Dependencies ──
+node_modules/
+
+# ── Bun / build output ──
+*.bundle
+.out/
+build/
+dist/
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+.venv/
+venvs/
+
+# ── Runtime scratch ──
+.runtime-tmp/*
+!.runtime-tmp/example.txt
+
+# ── Large, downloadable model assets (never commit these) ──
+# TTS: see download_tts_assets.py
+models/qwen3-tts-gguf/*.gguf
+# Vision: see download_vision_assets.py
+public/vendor/mediapipe/
+
+# ── Local environment ──
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db

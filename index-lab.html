@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Atrium · Camera Lab</title>
+    <link rel="stylesheet" href="./src/style.css" />
+    <link rel="stylesheet" href="./src/lab.css" />
+  </head>
+  <body>
+    <main id="lab">
+      <header id="lab-topbar">
+        <div>
+          <h1>Camera Lab</h1>
+          <p>
+            Exactly what your model will see, with nothing else running. Grant the camera,
+            then move your body and hold up some fingers.
+          </p>
+        </div>
+        <a class="lab-back" href="/">← Back to Atrium</a>
+      </header>
+
+      <section id="lab-stage">
+        <div id="lab-frame">
+          <video id="lab-video" playsinline muted></video>
+          <canvas id="lab-overlay"></canvas>
+          <div id="lab-empty">Camera off — press “Start camera”</div>
+        </div>
+
+        <div id="lab-readout">
+          <div class="readout-block">
+            <div class="readout-label">Fingers</div>
+            <div id="readout-fingers" class="readout-big">—</div>
+          </div>
+          <div class="readout-block">
+            <div class="readout-label">Seeing</div>
+            <div id="readout-headline" class="readout-mid">camera off</div>
+          </div>
+          <div class="readout-block">
+            <div class="readout-label">Motion</div>
+            <div class="motion-bars" id="readout-motion"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="lab-panel">
+        <div class="panel-row">
+          <label>
+            Camera
+            <select id="lab-device"></select>
+          </label>
+          <label>
+            Pace
+            <select id="lab-rate">
+              <option value="120">Fastest</option>
+              <option value="250">Balanced</option>
+              <option value="600">Gentle</option>
+              <option value="1200">Slowest</option>
+            </select>
+          </label>
+          <label class="check-row"><input type="checkbox" id="lab-mirror" checked /> Mirror</label>
+          <label class="check-row"><input type="checkbox" id="lab-overlay" checked /> Overlay</label>
+          <button id="lab-start" class="primary">Start camera</button>
+        </div>
+
+        <div class="panel-stats" id="lab-stats">idle</div>
+
+        <div class="panel-block">
+          <div class="readout-label">What the model is told</div>
+          <pre id="lab-text">—</pre>
+        </div>
+
+        <div class="panel-block">
+          <div class="readout-label">Tracking</div>
+          <div id="lab-assets" class="hint">checking…</div>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="./src/lab.js"></script>
+  </body>
+</html>
